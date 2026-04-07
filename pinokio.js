@@ -10,6 +10,7 @@ module.exports = {
       start:   info.running("start.js"),
       update:  info.running("update.js"),
       reset:   info.running("reset.js"),
+      setup:   info.running("setup.js"),
     }
 
     if (running.install) {
@@ -72,12 +73,25 @@ module.exports = {
       }]
     }
 
+    if (running.setup) {
+      return [{
+        default: true,
+        icon: "fa-solid fa-key",
+        text: "Setup",
+        href: "setup.js",
+      }]
+    }
+
     // Idle — show full action menu
     return [{
       default: true,
       icon: "fa-solid fa-power-off",
       text: "Start",
       href: "start.js",
+    }, {
+      icon: "fa-solid fa-key",
+      text: "Setup",
+      href: "setup.js",
     }, {
       icon: "fa-solid fa-arrows-rotate",
       text: "Update",
