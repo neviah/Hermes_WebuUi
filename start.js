@@ -30,8 +30,7 @@ module.exports = {
           TOKENIZERS_PARALLELISM: "false"
         },
         message: [
-          browserBinPathCommand,
-          "python hermes-webui/server.py"
+          browserBinPathCommand + " && python hermes-webui/server.py"
         ],
         on: [{
           event: "/(http:\\/\\/[0-9.:]+)/",
