@@ -58,12 +58,24 @@ function parseSimpleYaml(text) {
   const result = {}
   let currentObj = null
   let currentList = null
+
+  function parseScalar(raw) {
+    const val = (raw || '').trim()
+    if (!val) return ''
+    const unquoted = val.replace(/^["']|["']$/g, '')
+    if (/^-?\d+$/.test(unquoted)) {
+      const n = Number(unquoted)
+      if (Number.isFinite(n)) return n
+    }
+    return unquoted
+  }
+
   for (const line of text.split(/\r?\n/)) {
     if (!line.trim() || line.trim().startsWith('#')) continue
     if (!line.startsWith(' ')) {
       const m = line.match(/^([\w-]+)\s*:\s*(.*)$/)
       if (m) {
-        const val = m[2].replace(/^["']|["']$/g, '').trim()
+        const val = parseScalar(m[2])
         if (val) {
           result[m[1]] = val
           currentObj = null
@@ -83,7 +95,7 @@ function parseSimpleYaml(text) {
 
       const m = line.match(/^\s{2}([\w-]+)\s*:\s*(.*)$/)
       if (m) {
-        const nestedVal = m[2].replace(/^["']|["']$/g, '').trim()
+        const nestedVal = parseScalar(m[2])
         if (nestedVal) {
           currentObj[m[1]] = nestedVal
           currentList = null
@@ -99,12 +111,23 @@ function parseSimpleYaml(text) {
 
 function serializeSimpleYaml(obj) {
   const lines = []
+
+  function appendScalarLine(prefix, value) {
+    if (typeof value === 'number' && Number.isFinite(value)) {
+      lines.push(`${prefix}: ${value}`)
+      return
+    }
+    if (typeof value === 'string' && value) {
+      lines.push(`${prefix}: "${value}"`)
+    }
+  }
+
   for (const [k, v] of Object.entries(obj)) {
     if (typeof v === 'object' && v !== null) {
       lines.push(`${k}:`)
       for (const [nk, nv] of Object.entries(v)) {
-        if (typeof nv === 'string' && nv) {
-          lines.push(`  ${nk}: "${nv}"`)
+        if (typeof nv === 'string' || typeof nv === 'number') {
+          appendScalarLine(`  ${nk}`, nv)
         } else if (Array.isArray(nv) && nv.length > 0) {
           lines.push(`  ${nk}:`)
           for (const item of nv) {
@@ -114,11 +137,16 @@ function serializeSimpleYaml(obj) {
           }
         }
       }
-    } else if (typeof v === 'string' && v) {
-      lines.push(`${k}: "${v}"`)
+    } else if (typeof v === 'string' || typeof v === 'number') {
+      appendScalarLine(k, v)
     }
   }
   return lines.join('\n') + '\n'
+}
+
+function parsePositiveInt(raw, fallback) {
+  const n = Number(String(raw || '').trim())
+  return Number.isInteger(n) && n > 0 ? n : fallback
 }
 
 async function saveToConfigYaml(update, ondata) {
@@ -169,6 +197,9 @@ module.exports = {
           const cfg = parseSimpleYaml(yamlText)
           if (cfg.model && typeof cfg.model === 'object' && cfg.model.base_url) {
             existing._current_base_url = cfg.model.base_url
+          }
+          if (cfg.model && typeof cfg.model === 'object' && cfg.model.context_length) {
+            existing._current_context_length = cfg.model.context_length
           }
         } catch (_) {}
 
@@ -376,6 +407,13 @@ module.exports = {
             default: "{{local.existing._current_base_url || 'http://127.0.0.1:1234/v1'}}"
           },
           {
+            key: 'context_length',
+            type: 'text',
+            title: "Context Length (current: {{local.existing._current_context_length || 'not set'}})",
+            placeholder: '20350',
+            default: "{{local.existing._current_context_length || '20350'}}"
+          },
+          {
             key: 'compact_mode',
             type: 'select',
             title: 'Enable Compact Local Mode (recommended for 4k context models)',
@@ -398,7 +436,13 @@ module.exports = {
       when: "{{local.provider === 'lmstudio'}}",
       method: async (req, ondata) => {
         const baseUrl = (req.input.base_url || 'http://127.0.0.1:1234/v1').trim()
-        const update = { model: { base_url: baseUrl } }
+        const contextLength = parsePositiveInt(req.input.context_length, 20350)
+        const update = {
+          model: {
+            base_url: baseUrl,
+            context_length: contextLength
+          }
+        }
         const compactEnabled = (req.input.compact_mode || 'yes') === 'yes'
         if (compactEnabled) {
           await saveToConfigYaml({
@@ -432,6 +476,13 @@ module.exports = {
             default: "{{local.existing._current_base_url || 'http://localhost:11434/v1'}}"
           },
           {
+            key: 'context_length',
+            type: 'text',
+            title: "Context Length (current: {{local.existing._current_context_length || 'not set'}})",
+            placeholder: '8192',
+            default: "{{local.existing._current_context_length || '8192'}}"
+          },
+          {
             key: 'compact_mode',
             type: 'select',
             title: 'Enable Compact Local Mode (recommended for 4k context models)',
@@ -454,7 +505,13 @@ module.exports = {
       when: "{{local.provider === 'ollama'}}",
       method: async (req, ondata) => {
         const baseUrl = (req.input.base_url || 'http://localhost:11434/v1').trim()
-        const update = { model: { base_url: baseUrl } }
+        const contextLength = parsePositiveInt(req.input.context_length, 8192)
+        const update = {
+          model: {
+            base_url: baseUrl,
+            context_length: contextLength
+          }
+        }
         const compactEnabled = (req.input.compact_mode || 'yes') === 'yes'
         if (compactEnabled) {
           await saveToConfigYaml({
