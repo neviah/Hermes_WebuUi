@@ -10,20 +10,20 @@ module.exports = {
       }
     },
 
-    // Start Hermes Agent's native dashboard.
-    // We point HERMES_WEB_DIST at the prebuilt web/dist output so startup
-    // does not run npm install/build on every launch.
+    // Start the modern Hermes Web UI server from github.com/nesquena/hermes-webui
+    // This is the new three-panel interface with cron jobs, skills, memory, etc.
     {
       method: "shell.run",
       params: {
-        path: "app/hermes-agent",
+        venv: "app/env",
+        path: "app/hermes-webui",
         env: {
-          HERMES_WEB_DIST: "hermes_cli/web_dist",
+          HERMES_WEBUI_AGENT_DIR: "../hermes-agent",
+          HERMES_WEBUI_PORT: "{{local.port}}",
+          HERMES_WEBUI_HOST: "127.0.0.1",
           TOKENIZERS_PARALLELISM: "false"
         },
-        // Use the shared app/env explicitly so we don't create a second env
-        // under app/hermes-agent/env (which misses required Python deps).
-        message: "..\\env\\Scripts\\python.exe -m hermes_cli.main dashboard --host 127.0.0.1 --port {{local.port}} --no-open",
+        message: "python server.py",
         on: [{
           event: "/(http:\\/\\/[0-9.:]+)/",
           done: true

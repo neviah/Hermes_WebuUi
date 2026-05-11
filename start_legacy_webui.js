@@ -10,18 +10,17 @@ module.exports = {
       }
     },
 
-    // Start the legacy hermes-webui server.
+    // Start the legacy Hermes Agent CLI dashboard (hermes_cli.main dashboard)
     {
       method: "shell.run",
       params: {
-        venv: "env",
-        path: "app",
+        path: "app/hermes-agent",
+        venv: "app/env",
         env: {
-          HERMES_WEBUI_PORT: "{{local.port}}",
-          HERMES_WEBUI_HOST: "127.0.0.1",
+          HERMES_WEB_DIST: "hermes_cli/web_dist",
           TOKENIZERS_PARALLELISM: "false"
         },
-        message: "python hermes-webui/server.py",
+        message: "python -m hermes_cli.main dashboard --host 127.0.0.1 --port {{local.port}} --no-open",
         on: [{
           event: "/(http:\\/\\/[0-9.:]+)/",
           done: true
