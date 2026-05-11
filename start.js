@@ -16,13 +16,14 @@ module.exports = {
     {
       method: "shell.run",
       params: {
-        venv: "env",
         path: "app/hermes-agent",
         env: {
           HERMES_WEB_DIST: "hermes_cli/web_dist",
           TOKENIZERS_PARALLELISM: "false"
         },
-        message: "python -m hermes_cli.main dashboard --host 127.0.0.1 --port {{local.port}} --no-open",
+        // Use the shared app/env explicitly so we don't create a second env
+        // under app/hermes-agent/env (which misses required Python deps).
+        message: "..\\env\\Scripts\\python.exe -m hermes_cli.main dashboard --host 127.0.0.1 --port {{local.port}} --no-open",
         on: [{
           event: "/(http:\\/\\/[0-9.:]+)/",
           done: true

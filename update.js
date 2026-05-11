@@ -16,7 +16,11 @@ module.exports = {
       method: "shell.run",
       params: {
         path: "app/hermes-agent",
-        message: "git pull"
+        message: [
+          // Prior runs may touch lockfiles; restore them so git pull can proceed.
+          "git restore package-lock.json web/package-lock.json",
+          "git pull"
+        ]
       }
     },
 
@@ -45,7 +49,7 @@ module.exports = {
       params: {
         path: "app/hermes-agent",
         message: [
-          "npm install",
+          "npm ci",
           "npx agent-browser install"
         ]
       }
@@ -57,7 +61,7 @@ module.exports = {
       params: {
         path: "app/hermes-agent/web",
         message: [
-          "npm install",
+          "npm ci",
           "node -e \"const fs=require('fs');const cp=(a,b)=>fs.cpSync(a,b,{recursive:true});const rm=(d)=>{if(fs.existsSync(d))fs.rmSync(d,{recursive:true,force:true})};rm('public/fonts');rm('public/ds-assets');cp('node_modules/@nous-research/ui/dist/fonts','public/fonts');cp('node_modules/@nous-research/ui/dist/assets','public/ds-assets');\"",
           "npx vite build"
         ]
