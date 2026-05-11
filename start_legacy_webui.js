@@ -10,19 +10,18 @@ module.exports = {
       }
     },
 
-    // Start Hermes Agent's native dashboard.
-    // We point HERMES_WEB_DIST at the prebuilt web/dist output so startup
-    // does not run npm install/build on every launch.
+    // Start the legacy hermes-webui server.
     {
       method: "shell.run",
       params: {
         venv: "env",
-        path: "app/hermes-agent",
+        path: "app",
         env: {
-          HERMES_WEB_DIST: "hermes_cli/web_dist",
+          HERMES_WEBUI_PORT: "{{local.port}}",
+          HERMES_WEBUI_HOST: "127.0.0.1",
           TOKENIZERS_PARALLELISM: "false"
         },
-        message: "python -m hermes_cli.main dashboard --host 127.0.0.1 --port {{local.port}} --no-open",
+        message: "python hermes-webui/server.py",
         on: [{
           event: "/(http:\\/\\/[0-9.:]+)/",
           done: true
@@ -30,7 +29,6 @@ module.exports = {
       }
     },
 
-    // Expose the URL so pinokio.js can surface the dashboard button.
     {
       method: "local.set",
       params: {

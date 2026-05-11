@@ -26,6 +26,19 @@ module.exports = {
       }
     },
 
+    // Build Hermes Agent native dashboard frontend once at install-time.
+    {
+      method: "shell.run",
+      params: {
+        path: "app/hermes-agent/web",
+        message: [
+          "npm install",
+          "node -e \"const fs=require('fs');const cp=(a,b)=>fs.cpSync(a,b,{recursive:true});const rm=(d)=>{if(fs.existsSync(d))fs.rmSync(d,{recursive:true,force:true})};rm('public/fonts');rm('public/ds-assets');cp('node_modules/@nous-research/ui/dist/fonts','public/fonts');cp('node_modules/@nous-research/ui/dist/assets','public/ds-assets');\"",
+          "npx vite build"
+        ]
+      }
+    },
+
     // Build a shared Python 3.11 venv and install both projects into it.
     // hermes-agent is installed in editable mode so `git pull` in update.js
     // picks up changes without a reinstall step.
@@ -37,6 +50,7 @@ module.exports = {
         path: "app",
         message: [
           "uv pip install -e \"./hermes-agent[cron,pty,mcp]\"",
+          "uv pip install fastapi \"uvicorn[standard]\"",
           "uv pip install -r ./hermes-webui/requirements.txt"
         ]
       }

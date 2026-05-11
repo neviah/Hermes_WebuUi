@@ -1,7 +1,7 @@
 module.exports = {
   version: "5.0",
   title: "Hermes + WebUI",
-  description: "One-click Hermes Agent with a beautiful web UI. Persistent memory, multi-provider AI (OpenAI, Anthropic, Gemini, DeepSeek and more), scheduled jobs, skills, and sessions — all from your browser. https://github.com/NousResearch/hermes-agent + https://github.com/nesquena/hermes-webui",
+  description: "One-click Hermes Agent with its native dashboard UI. Persistent memory, multi-provider AI (OpenAI, Anthropic, Gemini, DeepSeek and more), scheduled jobs, skills, and sessions — all from your browser. Includes a legacy hermes-webui fallback path. https://github.com/NousResearch/hermes-agent",
   icon: "icon.png",
   menu: async (kernel, info) => {
     let installed = info.exists("app/env")
@@ -39,7 +39,7 @@ module.exports = {
           default: true,
           popout: true,
           icon: "fa-solid fa-message",
-          text: "Open Hermes WebUI",
+          text: "Open Hermes Dashboard",
           href: local.url,
         }, {
           icon: "fa-solid fa-terminal",
@@ -86,8 +86,12 @@ module.exports = {
     return [{
       default: true,
       icon: "fa-solid fa-power-off",
-      text: "Start",
+      text: "Start (Native Dashboard)",
       href: "start.js",
+    }, {
+      icon: "fa-solid fa-window-restore",
+      text: "Start (Legacy WebUI)",
+      href: "start_legacy_webui.js",
     }, {
       icon: "fa-solid fa-key",
       text: "Setup",
