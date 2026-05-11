@@ -15,15 +15,15 @@ module.exports = {
     {
       method: "shell.run",
       params: {
-        venv: "app/env",
         path: "app/hermes-webui",
         env: {
           HERMES_WEBUI_AGENT_DIR: "../hermes-agent",
           HERMES_WEBUI_PORT: "{{local.port}}",
           HERMES_WEBUI_HOST: "127.0.0.1",
-          TOKENIZERS_PARALLELISM: "false"
+          TOKENIZERS_PARALLELISM: "false",
+          PYTHONPATH: "../hermes-agent:."
         },
-        message: "python server.py",
+        message: "..\\env\\Scripts\\python.exe server.py",
         on: [{
           event: "/(http:\\/\\/[0-9.:]+)/",
           done: true
