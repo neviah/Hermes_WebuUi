@@ -10,22 +10,20 @@ module.exports = {
       }
     },
 
-    // Start the Hermes Web UI server.
-    // config.py auto-discovers the agent via sibling directory resolution:
-    //   REPO_ROOT = <this_repo>/api/../  =>  app/hermes-webui
-    //   sibling   →  app/hermes-agent   (our clone)
-    // No HERMES_WEBUI_AGENT_DIR override needed.
+    // Start Hermes Agent's native dashboard.
+    // We point HERMES_WEB_DIST at the prebuilt web/dist output so startup
+    // does not run npm install/build on every launch.
     {
       method: "shell.run",
       params: {
-        venv: "env",
-        path: "app",
+        path: "app/hermes-agent",
         env: {
-          HERMES_WEBUI_PORT: "{{local.port}}",
-          HERMES_WEBUI_HOST: "127.0.0.1",
+          HERMES_WEB_DIST: "hermes_cli/web_dist",
           TOKENIZERS_PARALLELISM: "false"
         },
-        message: "python hermes-webui/server.py",
+        // Use the shared app/env explicitly so we don't create a second env
+        // under app/hermes-agent/env (which misses required Python deps).
+        message: "..\\env\\Scripts\\python.exe -m hermes_cli.main dashboard --host 127.0.0.1 --port {{local.port}} --no-open",
         on: [{
           event: "/(http:\\/\\/[0-9.:]+)/",
           done: true
@@ -33,7 +31,7 @@ module.exports = {
       }
     },
 
-    // Expose the URL so pinokio.js can surface the "Open WebUI" button.
+    // Expose the URL so pinokio.js can surface the dashboard button.
     {
       method: "local.set",
       params: {
